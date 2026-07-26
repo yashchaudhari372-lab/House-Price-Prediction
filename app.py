@@ -453,7 +453,7 @@ HTML_TEMPLATE = """
         <div class="analytics-panel">
             <div class="prediction-badge pulse">
                 <div class="prediction-label">Estimated Market Value</div>
-                <div class="prediction-value" id="predictionOutput">$0.00</div>
+                <div class="prediction-value" id="predictionOutput">₹0.00</div>
             </div>
 
             <div class="card" style="flex: 1;">
@@ -546,7 +546,7 @@ HTML_TEMPLATE = """
             const result = await response.json();
 
             if (result.success) {
-                // Animate number count-up
+                // Animate number count-up formatted in INR (₹)
                 animateValue("predictionOutput", 0, result.prediction, 1000);
             } else {
                 alert("Error making prediction: " + result.error);
@@ -564,7 +564,14 @@ HTML_TEMPLATE = """
             if (!startTimestamp) startTimestamp = timestamp;
             const progress = Math.min((timestamp - startTimestamp) / duration, 1);
             const current = progress * (end - start) + start;
-            obj.innerHTML = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(current);
+            
+            // Format number using Indian Rupees (en-IN, INR)
+            obj.innerHTML = new Intl.NumberFormat('en-IN', { 
+                style: 'currency', 
+                currency: 'INR',
+                maximumFractionDigits: 2 
+            }).format(current);
+
             if (progress < 1) {
                 window.requestAnimationFrame(step);
             }
