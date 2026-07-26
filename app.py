@@ -133,6 +133,8 @@ HTML_TEMPLATE = """
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
             box-shadow: 0 20px 40px rgba(0,0,0,0.4);
             animation: fadeInDown 0.8s ease-out;
         }
@@ -149,14 +151,35 @@ HTML_TEMPLATE = """
             gap: 12px;
         }
 
-        .theme-selector {
+        .header-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: rgba(0, 0, 0, 0.2);
+            gap: 1rem;
+        }
+
+        .currency-selector, .theme-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.25);
             padding: 6px 14px;
             border-radius: 30px;
             border: 1px solid var(--card-border);
+        }
+
+        .currency-selector select {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .currency-selector select option {
+            background: #0f172a;
+            color: var(--text-main);
         }
 
         .theme-btn {
@@ -356,11 +379,25 @@ HTML_TEMPLATE = """
         <div class="header-title">
             <h1><i class="fa-solid fa-chart-line" style="color: var(--accent-primary);"></i> RealEstate AI Predictor</h1>
         </div>
-        <div class="theme-selector">
-            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Theme:</span>
-            <button class="theme-btn emerald" onclick="setTheme('emerald')" title="Emerald Green"></button>
-            <button class="theme-btn cyber" onclick="setTheme('cyber')" title="Cyberpunk Pink"></button>
-            <button class="theme-btn royal" onclick="setTheme('royal')" title="Royal Blue"></button>
+        <div class="header-controls">
+            <!-- Currency Selection -->
+            <div class="currency-selector">
+                <i class="fa-solid fa-coins" style="color: var(--accent-primary); font-size: 0.85rem;"></i>
+                <select id="currencySelect" onchange="updateCurrency()">
+                    <option value="USD" data-symbol="$" data-rate="1">USD ($)</option>
+                    <option value="INR" data-symbol="₹" data-rate="83.0">INR (₹)</option>
+                    <option value="EUR" data-symbol="€" data-rate="0.92">EUR (€)</option>
+                    <option value="GBP" data-symbol="£" data-rate="0.79">GBP (£)</option>
+                </select>
+            </div>
+
+            <!-- Theme Selection -->
+            <div class="theme-selector">
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Theme:</span>
+                <button class="theme-btn emerald" onclick="setTheme('emerald')" title="Emerald Green"></button>
+                <button class="theme-btn cyber" onclick="setTheme('cyber')" title="Cyberpunk Pink"></button>
+                <button class="theme-btn royal" onclick="setTheme('royal')" title="Royal Blue"></button>
+            </div>
         </div>
     </header>
 
@@ -453,7 +490,7 @@ HTML_TEMPLATE = """
         <div class="analytics-panel">
             <div class="prediction-badge pulse">
                 <div class="prediction-label">Estimated Market Value</div>
-                <div class="prediction-value" id="predictionOutput">₹0.00</div>
+                <div class="prediction-value" id="predictionOutput">$0.00</div>
             </div>
 
             <div class="card" style="flex: 1;">
@@ -470,10 +507,30 @@ HTML_TEMPLATE = """
 </div>
 
 <script>
+    let rawBasePrediction = 0; // Store standard USD prediction base amount
+
     // Theme Switcher Logic
     function setTheme(themeName) {
         document.documentElement.setAttribute('data-theme', themeName);
         updateChartColors();
+    }
+
+    // Currency Switcher Logic
+    function updateCurrency() {
+        if (rawBasePrediction > 0) {
+            renderCurrencyValue(rawBasePrediction);
+        }
+    }
+
+    function renderCurrencyValue(usdAmount) {
+        const select = document.getElementById('currencySelect');
+        const selectedOption = select.options[select.selectedIndex];
+        const rate = parseFloat(selectedOption.getAttribute('data-rate'));
+        const code = select.value;
+
+        const convertedAmount = usdAmount * rate;
+        
+        animateValue("predictionOutput", 0, convertedAmount, 800, code);
     }
 
     // Chart Setup using Chart.js
@@ -546,8 +603,8 @@ HTML_TEMPLATE = """
             const result = await response.json();
 
             if (result.success) {
-                // Animate number count-up formatted in INR (₹)
-                animateValue("predictionOutput", 0, result.prediction, 1000);
+                rawBasePrediction = result.prediction;
+                renderCurrencyValue(rawBasePrediction);
             } else {
                 alert("Error making prediction: " + result.error);
             }
@@ -557,21 +614,18 @@ HTML_TEMPLATE = """
         }
     });
 
-    function animateValue(id, start, end, duration) {
+    function animateValue(id, start, end, duration, currencyCode) {
         const obj = document.getElementById(id);
         let startTimestamp = null;
         const step = (timestamp) => {
             if (!startTimestamp) startTimestamp = timestamp;
             const progress = Math.min((timestamp - startTimestamp) / duration, 1);
             const current = progress * (end - start) + start;
-            
-            // Format number using Indian Rupees (en-IN, INR)
-            obj.innerHTML = new Intl.NumberFormat('en-IN', { 
+            obj.innerHTML = new Intl.NumberFormat('en-US', { 
                 style: 'currency', 
-                currency: 'INR',
-                maximumFractionDigits: 2 
+                currency: currencyCode,
+                maximumFractionDigits: 2
             }).format(current);
-
             if (progress < 1) {
                 window.requestAnimationFrame(step);
             }
