@@ -11,7 +11,7 @@
 
 ## 📌 Project Overview
 
-**House Price Prediction System** is a machine learning-powered web application designed to estimate residential property prices based on property information. It demonstrates an end-to-end workflow: loading a trained regression model, accepting user inputs through a web interface, generating a price estimate, and displaying the result.
+**House Price Prediction System** is a machine learning-powered web application designed to estimate residential property prices based on property information. It demonstrates an end-to-end workflow: loading a trained regression model, accepting user inputs through a web interface, generating a price estimate, and displaying the result..
 
 The project connects predictive analytics with a user-friendly Flask application, making regression-based estimates easier to explore.
 
